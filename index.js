@@ -69,8 +69,8 @@ async function doAction(actionId, actionName, args = null) {
       },
       args,
       /*{
-                "key": "value",
-            }*/
+            "key": "value",
+        }*/
     });
   } else {
     body = JSON.stringify({
