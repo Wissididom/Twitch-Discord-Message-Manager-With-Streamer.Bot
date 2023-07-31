@@ -1,17 +1,7 @@
 import * as DotEnv from "dotenv";
+import { sanitizeUrl } from "./util";
 
 DotEnv.config();
-
-function sanitizeUrl(url) {
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    url = "http://" + url;
-  }
-  url = url.replace("///", "//");
-  if (!url.endsWith("/")) {
-    url += "/";
-  }
-  return url;
-}
 
 async function getActions() {
   let sanitizedUrl =

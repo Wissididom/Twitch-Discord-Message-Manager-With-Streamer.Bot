@@ -11,6 +11,7 @@ import {
   TextInputStyle,
 } from "discord.js";
 import WebSocket from "ws";
+import { sanitizeUrl } from "./util";
 
 DotEnv.config();
 
@@ -24,17 +25,6 @@ const client = new Client({
     Partials.Reaction,
   ],
 }); // Discord Object
-
-function sanitizeUrl(url) {
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    url = "http://" + url;
-  }
-  url = url.replace("///", "//");
-  if (!url.endsWith("/")) {
-    url += "/";
-  }
-  return url;
-}
 
 async function getActionName(actionId, onlyEnabled = true) {
   let sanitizedUrl =
