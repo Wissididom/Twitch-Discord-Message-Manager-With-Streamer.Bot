@@ -1,5 +1,5 @@
 import * as DotEnv from "dotenv";
-import { sanitizeUrl } from "./util";
+import { sanitizeUrl } from "./util.js";
 
 DotEnv.config();
 

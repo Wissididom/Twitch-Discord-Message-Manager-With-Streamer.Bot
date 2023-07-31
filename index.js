@@ -11,7 +11,7 @@ import {
   TextInputStyle,
 } from "discord.js";
 import WebSocket from "ws";
-import { sanitizeUrl } from "./util";
+import { sanitizeUrl } from "./util.js";
 
 DotEnv.config();
 
