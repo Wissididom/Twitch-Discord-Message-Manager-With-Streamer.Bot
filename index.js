@@ -282,7 +282,7 @@ function connectstreamerbot() {
               banBtn,
             );
             dcChannel.send({
-              content: `${nameToPost}: ${message}`,
+              content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
               components: [actionRow],
             });
           }
