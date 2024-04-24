@@ -30,52 +30,40 @@ const SBClient = new StreamerbotClient({
     console.log("Streamer.Bot Connection opened!");
     await SBClient.on("Twitch.ChatMessage", async (data) => {
       console.log("New Twitch Chat Message:", data);
-      // grab message and parse JSON
-      const msg = event.data;
-      //console.log('msg:' + msg);
-      const wsdata = JSON.parse(msg);
-      // check for events to trigger
-      if (!wsdata.event) return;
-      if (wsdata.event.source == "Twitch") {
-        if (wsdata.event.type == "ChatMessage") {
-          let msgId = wsdata.data.message.msgId;
-          //let userId = wsdata.data.message.userId;
-          let displayName = wsdata.data.message.displayName;
-          let username = wsdata.data.message.username;
-          let nameToPost =
-            displayName.toLowerCase() == username
-              ? displayName
-              : `${displayName} (${username})`;
-          let message = wsdata.data.message.message;
-          let dcChannel = await client.channels.fetch(
-            process.env["CHANNEL_ID"],
+      let msgId = data.data.message.msgId;
+      //let userId = data.data.message.userId;
+      let displayName = data.data.message.displayName;
+      let username = data.data.message.username;
+      let nameToPost =
+        displayName.toLowerCase() == username
+          ? displayName
+          : `${displayName} (${username})`;
+      let message = data.data.message.message;
+      let dcChannel = await client.channels.fetch(process.env["CHANNEL_ID"]);
+      if (dcChannel) {
+        if (dcChannel.isTextBased()) {
+          // https://discordjs.guide/message-components/buttons.html
+          let deleteBtn = new ButtonBuilder()
+            .setCustomId(`delete${msgId}`)
+            .setLabel("Delete")
+            .setStyle(ButtonStyle.Success);
+          let timeoutBtn = new ButtonBuilder()
+            .setCustomId(`timeout${username}`)
+            .setLabel("Timeout")
+            .setStyle(ButtonStyle.Danger);
+          let banBtn = new ButtonBuilder()
+            .setCustomId(`ban${username}`)
+            .setLabel("Ban")
+            .setStyle(ButtonStyle.Danger);
+          let actionRow = new ActionRowBuilder().addComponents(
+            deleteBtn,
+            timeoutBtn,
+            banBtn,
           );
-          if (dcChannel) {
-            if (dcChannel.isTextBased()) {
-              // https://discordjs.guide/message-components/buttons.html
-              let deleteBtn = new ButtonBuilder()
-                .setCustomId(`delete${msgId}`)
-                .setLabel("Delete")
-                .setStyle(ButtonStyle.Success);
-              let timeoutBtn = new ButtonBuilder()
-                .setCustomId(`timeout${username}`)
-                .setLabel("Timeout")
-                .setStyle(ButtonStyle.Danger);
-              let banBtn = new ButtonBuilder()
-                .setCustomId(`ban${username}`)
-                .setLabel("Ban")
-                .setStyle(ButtonStyle.Danger);
-              let actionRow = new ActionRowBuilder().addComponents(
-                deleteBtn,
-                timeoutBtn,
-                banBtn,
-              );
-              dcChannel.send({
-                content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
-                components: [actionRow],
-              });
-            }
-          }
+          dcChannel.send({
+            content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
+            components: [actionRow],
+          });
         }
       }
     });
