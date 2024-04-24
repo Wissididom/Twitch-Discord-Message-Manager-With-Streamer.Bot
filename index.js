@@ -96,10 +96,7 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.customId.startsWith("delete")) {
       let id = interaction.customId.substring("delete".length);
       let actionId = process.env["DELETE_ACTION_ID"];
-      let actionName = await getActionName(actionId).catch(
-        (err) => console.warn,
-      );
-      await doAction(actionId, actionName, {
+      await doAction(actionId, {
         id: id,
       }).then(() => {
         interaction.reply("Told Streamer.Bot to run the delete action");
@@ -142,18 +139,15 @@ client.on("interactionCreate", async (interaction) => {
         let duration = submitted.fields.getTextInputValue("timeoutDuration");
         let reason = submitted.fields.getTextInputValue("timeoutReason");
         let actionId = process.env["TIMEOUT_ACTION_ID"];
-        let actionName = await getActionName(actionId).catch(
-          (err) => console.warn,
-        );
         if (reason == undefined || reason == null || reason.trim() == "") {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
             duration: duration,
           }).then(() => {
             submitted.reply("Told Streamer.Bot to run the timeout action");
           });
         } else {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
             duration: duration,
             reason: reason,
@@ -190,17 +184,14 @@ client.on("interactionCreate", async (interaction) => {
       if (submitted) {
         let reason = submitted.fields.getTextInputValue("banReason");
         let actionId = process.env["BAN_ACTION_ID"];
-        let actionName = await getActionName(actionId).catch(
-          (err) => console.warn,
-        );
         if (reason == undefined || reason == null || reason.trim() == "") {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
           }).then(() => {
             submitted.reply("Told Streamer.Bot to run the ban action");
           });
         } else {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
             reason: reason,
           }).then(() => {
