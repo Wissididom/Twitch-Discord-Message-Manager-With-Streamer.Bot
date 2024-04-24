@@ -1,4 +1,4 @@
-import * as DotEnv from "dotenv";
+import "dotenv/config";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -11,9 +11,6 @@ import {
   TextInputStyle,
 } from "discord.js";
 import WebSocket from "ws";
-import { sanitizeUrl } from "./util.js";
-
-DotEnv.config();
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -26,62 +23,26 @@ const client = new Client({
   ],
 }); // Discord Object
 
-async function getActionName(actionId, onlyEnabled = true) {
-  let sanitizedUrl =
-    sanitizeUrl(process.env["STREAMER_BOT_HTTP_SERVER"]) + "GetActions";
-  let response = await fetch(sanitizedUrl);
-  if (response.status == 200) {
-    let actions = (await response.json()).actions;
-    for (let i = 0; i < actions.length; i++) {
-      if (actions[i].id == actionId) {
-        if (!onlyEnabled || (actions[i].enabled && onlyEnabled)) {
-          return actions[i].name;
-        }
-      }
-    }
-    return null;
-  } else {
-    return new Promise.reject(
-      "Non 200 response from Streamer.Bot's HTTP Server!",
-    );
-  }
+async function getActions(ws) {
+  let body = {
+    request: "GetActions",
+    id: "getactions",
+  };
+  ws.send(JSON.stringify(body));
 }
 
-async function doAction(actionId, actionName, args = null) {
-  let sanitizedUrl =
-    sanitizeUrl(process.env["STREAMER_BOT_HTTP_SERVER"]) + "DoAction";
-  let body = null;
-  if (args) {
-    body = JSON.stringify({
-      action: {
-        id: actionId,
-        name: actionName,
-      },
-      args,
-      /*{
-            "key": "value",
-        }*/
-    });
-  } else {
-    body = JSON.stringify({
-      action: {
-        id: actionId,
-        name: actionName,
-      },
-      args: {},
-    });
-  }
-  let response = await fetch(sanitizedUrl, {
-    method: "POST",
-    body: body,
-  });
-  if (response.status == 204) {
-    return Promise.resolve();
-  } else {
-    return new Promise.reject(
-      "Non 204 response from Streamer.Bot's HTTP Server!",
-    );
-  }
+async function doAction(ws, actionId, actionName, args = null) {
+  if (!args) args = {};
+  let body = {
+    request: "DoAction",
+    action: {
+      id: actionId,
+      name: actionName,
+    },
+    args,
+    id: `doaction-${actionId}-${actionName}`,
+  };
+  ws.send(JSON.stringify(body));
 }
 
 client.on("ready", () => {
@@ -242,7 +203,6 @@ function connectstreamerbot() {
     );
   };
   ws.onmessage = async (event) => {
-    // https://wiki.streamer.bot/en/Servers-Clients/WebSocket-Server/Events
     // grab message and parse JSON
     const msg = event.data;
     //console.log('msg:' + msg);
