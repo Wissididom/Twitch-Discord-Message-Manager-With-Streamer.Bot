@@ -10,7 +10,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import WebSocket from "ws";
+import { StreamerbotClient } from "@streamerbot/client";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -23,26 +23,78 @@ const client = new Client({
   ],
 }); // Discord Object
 
-async function getActions(ws) {
-  let body = {
-    request: "GetActions",
-    id: "getactions",
-  };
-  ws.send(JSON.stringify(body));
+const SBClient = new StreamerbotClient({
+  host: process.env.STREAMER_BOT_WS_SERVER_HOST,
+  port: process.env.STREAMER_BOT_WS_SERVER_PORT,
+  onConnect: async (data) => {
+    console.log("Streamer.Bot Connection opened!");
+    await SBClient.on("Twitch.ChatMessage", async (data) => {
+      console.log("New Twitch Chat Message:", data);
+      // grab message and parse JSON
+      const msg = event.data;
+      //console.log('msg:' + msg);
+      const wsdata = JSON.parse(msg);
+      // check for events to trigger
+      if (!wsdata.event) return;
+      if (wsdata.event.source == "Twitch") {
+        if (wsdata.event.type == "ChatMessage") {
+          let msgId = wsdata.data.message.msgId;
+          //let userId = wsdata.data.message.userId;
+          let displayName = wsdata.data.message.displayName;
+          let username = wsdata.data.message.username;
+          let nameToPost =
+            displayName.toLowerCase() == username
+              ? displayName
+              : `${displayName} (${username})`;
+          let message = wsdata.data.message.message;
+          let dcChannel = await client.channels.fetch(
+            process.env["CHANNEL_ID"],
+          );
+          if (dcChannel) {
+            if (dcChannel.isTextBased()) {
+              // https://discordjs.guide/message-components/buttons.html
+              let deleteBtn = new ButtonBuilder()
+                .setCustomId(`delete${msgId}`)
+                .setLabel("Delete")
+                .setStyle(ButtonStyle.Success);
+              let timeoutBtn = new ButtonBuilder()
+                .setCustomId(`timeout${username}`)
+                .setLabel("Timeout")
+                .setStyle(ButtonStyle.Danger);
+              let banBtn = new ButtonBuilder()
+                .setCustomId(`ban${username}`)
+                .setLabel("Ban")
+                .setStyle(ButtonStyle.Danger);
+              let actionRow = new ActionRowBuilder().addComponents(
+                deleteBtn,
+                timeoutBtn,
+                banBtn,
+              );
+              dcChannel.send({
+                content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
+                components: [actionRow],
+              });
+            }
+          }
+        }
+      }
+    });
+  },
+  onDisconnect: () => {
+    console.log("Streamer.Bot Connection closed!");
+  },
+  onError: (err) => {
+    console.log("Streamer.Bot Connection errored!", err);
+  },
+});
+
+async function getActions() {
+  return SBClient.getActions();
 }
 
-async function doAction(ws, actionId, actionName, args = null) {
+async function doAction(actionId, args = null) {
   if (!args) args = {};
-  let body = {
-    request: "DoAction",
-    action: {
-      id: actionId,
-      name: actionName,
-    },
-    args,
-    id: `doaction-${actionId}-${actionName}`,
-  };
-  ws.send(JSON.stringify(body));
+  return SBClient.doAction(actionId, args);
 }
 
 client.on("ready", () => {
@@ -180,76 +232,3 @@ if (!process.env["TOKEN"]) {
 } else {
   client.login(process.env["TOKEN"]);
 }
-
-function connectstreamerbot() {
-  const ws = new WebSocket(process.env["STREAMER_BOT_WS_SERVER"]);
-  ws.onclose = (event) => {
-    console.log("Streamer.Bot Connection closed!", event.code, event.reason);
-    setTimeout(connectstreamerbot, 10000);
-  };
-  ws.onerror = (event) => {
-    console.log("Streamer.Bot Connection errored!", event);
-  };
-  ws.onopen = (event) => {
-    console.log("Streamer.Bot Connection opened!");
-    ws.send(
-      JSON.stringify({
-        request: "Subscribe",
-        events: {
-          Twitch: ["ChatMessage"],
-        },
-        id: "discord-manager",
-      }),
-    );
-  };
-  ws.onmessage = async (event) => {
-    // grab message and parse JSON
-    const msg = event.data;
-    //console.log('msg:' + msg);
-    const wsdata = JSON.parse(msg);
-    // check for events to trigger
-    if (!wsdata.event) return;
-    if (wsdata.event.source == "Twitch") {
-      if (wsdata.event.type == "ChatMessage") {
-        let msgId = wsdata.data.message.msgId;
-        //let userId = wsdata.data.message.userId;
-        let displayName = wsdata.data.message.displayName;
-        let username = wsdata.data.message.username;
-        let nameToPost =
-          displayName.toLowerCase() == username
-            ? displayName
-            : `${displayName} (${username})`;
-        let message = wsdata.data.message.message;
-        let dcChannel = await client.channels.fetch(process.env["CHANNEL_ID"]);
-        if (dcChannel) {
-          if (dcChannel.isTextBased()) {
-            // https://discordjs.guide/message-components/buttons.html
-            let deleteBtn = new ButtonBuilder()
-              .setCustomId(`delete${msgId}`)
-              .setLabel("Delete")
-              .setStyle(ButtonStyle.Success);
-            let timeoutBtn = new ButtonBuilder()
-              .setCustomId(`timeout${username}`)
-              .setLabel("Timeout")
-              .setStyle(ButtonStyle.Danger);
-            let banBtn = new ButtonBuilder()
-              .setCustomId(`ban${username}`)
-              .setLabel("Ban")
-              .setStyle(ButtonStyle.Danger);
-            let actionRow = new ActionRowBuilder().addComponents(
-              deleteBtn,
-              timeoutBtn,
-              banBtn,
-            );
-            dcChannel.send({
-              content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
-              components: [actionRow],
-            });
-          }
-        }
-      }
-    }
-  };
-}
-
-setTimeout(connectstreamerbot, 100);
