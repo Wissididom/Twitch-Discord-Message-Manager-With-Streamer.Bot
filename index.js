@@ -1,4 +1,4 @@
-import * as DotEnv from "dotenv";
+import "dotenv/config";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -10,10 +10,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
 } from "discord.js";
-import WebSocket from "ws";
-import { sanitizeUrl } from "./util.js";
-
-DotEnv.config();
+import { StreamerbotClient } from "@streamerbot/client";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
@@ -26,62 +23,66 @@ const client = new Client({
   ],
 }); // Discord Object
 
-async function getActionName(actionId, onlyEnabled = true) {
-  let sanitizedUrl =
-    sanitizeUrl(process.env["STREAMER_BOT_HTTP_SERVER"]) + "GetActions";
-  let response = await fetch(sanitizedUrl);
-  if (response.status == 200) {
-    let actions = (await response.json()).actions;
-    for (let i = 0; i < actions.length; i++) {
-      if (actions[i].id == actionId) {
-        if (!onlyEnabled || (actions[i].enabled && onlyEnabled)) {
-          return actions[i].name;
+const SBClient = new StreamerbotClient({
+  host: process.env.STREAMER_BOT_WS_SERVER_HOST,
+  port: process.env.STREAMER_BOT_WS_SERVER_PORT,
+  onConnect: async (data) => {
+    console.log("Streamer.Bot Connection opened!");
+    await SBClient.on("Twitch.ChatMessage", async (data) => {
+      console.log("New Twitch Chat Message:", data);
+      let msgId = data.data.message.msgId;
+      //let userId = data.data.message.userId;
+      let displayName = data.data.message.displayName;
+      let username = data.data.message.username;
+      let nameToPost =
+        displayName.toLowerCase() == username
+          ? displayName
+          : `${displayName} (${username})`;
+      let message = data.data.message.message;
+      let dcChannel = await client.channels.fetch(process.env["CHANNEL_ID"]);
+      if (dcChannel) {
+        if (dcChannel.isTextBased()) {
+          // https://discordjs.guide/message-components/buttons.html
+          let deleteBtn = new ButtonBuilder()
+            .setCustomId(`delete${msgId}`)
+            .setLabel("Delete")
+            .setStyle(ButtonStyle.Success);
+          let timeoutBtn = new ButtonBuilder()
+            .setCustomId(`timeout${username}`)
+            .setLabel("Timeout")
+            .setStyle(ButtonStyle.Danger);
+          let banBtn = new ButtonBuilder()
+            .setCustomId(`ban${username}`)
+            .setLabel("Ban")
+            .setStyle(ButtonStyle.Danger);
+          let actionRow = new ActionRowBuilder().addComponents(
+            deleteBtn,
+            timeoutBtn,
+            banBtn,
+          );
+          dcChannel.send({
+            content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
+            components: [actionRow],
+          });
         }
       }
-    }
-    return null;
-  } else {
-    return new Promise.reject(
-      "Non 200 response from Streamer.Bot's HTTP Server!",
-    );
-  }
+    });
+  },
+  onDisconnect: () => {
+    console.log("Streamer.Bot Connection closed!");
+  },
+  onError: (err) => {
+    console.log("Streamer.Bot Connection errored!", err);
+  },
+});
+
+async function getActions() {
+  return SBClient.getActions();
 }
 
-async function doAction(actionId, actionName, args = null) {
-  let sanitizedUrl =
-    sanitizeUrl(process.env["STREAMER_BOT_HTTP_SERVER"]) + "DoAction";
-  let body = null;
-  if (args) {
-    body = JSON.stringify({
-      action: {
-        id: actionId,
-        name: actionName,
-      },
-      args,
-      /*{
-            "key": "value",
-        }*/
-    });
-  } else {
-    body = JSON.stringify({
-      action: {
-        id: actionId,
-        name: actionName,
-      },
-      args: {},
-    });
-  }
-  let response = await fetch(sanitizedUrl, {
-    method: "POST",
-    body: body,
-  });
-  if (response.status == 204) {
-    return Promise.resolve();
-  } else {
-    return new Promise.reject(
-      "Non 204 response from Streamer.Bot's HTTP Server!",
-    );
-  }
+async function doAction(actionId, args = null) {
+  if (!args) args = {};
+  return SBClient.doAction(actionId, args);
 }
 
 client.on("ready", () => {
@@ -95,10 +96,7 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.customId.startsWith("delete")) {
       let id = interaction.customId.substring("delete".length);
       let actionId = process.env["DELETE_ACTION_ID"];
-      let actionName = await getActionName(actionId).catch(
-        (err) => console.warn,
-      );
-      await doAction(actionId, actionName, {
+      await doAction(actionId, {
         id: id,
       }).then(() => {
         interaction.reply("Told Streamer.Bot to run the delete action");
@@ -141,18 +139,15 @@ client.on("interactionCreate", async (interaction) => {
         let duration = submitted.fields.getTextInputValue("timeoutDuration");
         let reason = submitted.fields.getTextInputValue("timeoutReason");
         let actionId = process.env["TIMEOUT_ACTION_ID"];
-        let actionName = await getActionName(actionId).catch(
-          (err) => console.warn,
-        );
         if (reason == undefined || reason == null || reason.trim() == "") {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
             duration: duration,
           }).then(() => {
             submitted.reply("Told Streamer.Bot to run the timeout action");
           });
         } else {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
             duration: duration,
             reason: reason,
@@ -189,17 +184,14 @@ client.on("interactionCreate", async (interaction) => {
       if (submitted) {
         let reason = submitted.fields.getTextInputValue("banReason");
         let actionId = process.env["BAN_ACTION_ID"];
-        let actionName = await getActionName(actionId).catch(
-          (err) => console.warn,
-        );
         if (reason == undefined || reason == null || reason.trim() == "") {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
           }).then(() => {
             submitted.reply("Told Streamer.Bot to run the ban action");
           });
         } else {
-          await doAction(actionId, actionName, {
+          await doAction(actionId, {
             username: username,
             reason: reason,
           }).then(() => {
@@ -219,77 +211,3 @@ if (!process.env["TOKEN"]) {
 } else {
   client.login(process.env["TOKEN"]);
 }
-
-function connectstreamerbot() {
-  const ws = new WebSocket(process.env["STREAMER_BOT_WS_SERVER"]);
-  ws.onclose = (event) => {
-    console.log("Streamer.Bot Connection closed!", event.code, event.reason);
-    setTimeout(connectstreamerbot, 10000);
-  };
-  ws.onerror = (event) => {
-    console.log("Streamer.Bot Connection errored!", event);
-  };
-  ws.onopen = (event) => {
-    console.log("Streamer.Bot Connection opened!");
-    ws.send(
-      JSON.stringify({
-        request: "Subscribe",
-        events: {
-          Twitch: ["ChatMessage"],
-        },
-        id: "discord-manager",
-      }),
-    );
-  };
-  ws.onmessage = async (event) => {
-    // https://wiki.streamer.bot/en/Servers-Clients/WebSocket-Server/Events
-    // grab message and parse JSON
-    const msg = event.data;
-    //console.log('msg:' + msg);
-    const wsdata = JSON.parse(msg);
-    // check for events to trigger
-    if (!wsdata.event) return;
-    if (wsdata.event.source == "Twitch") {
-      if (wsdata.event.type == "ChatMessage") {
-        let msgId = wsdata.data.message.msgId;
-        //let userId = wsdata.data.message.userId;
-        let displayName = wsdata.data.message.displayName;
-        let username = wsdata.data.message.username;
-        let nameToPost =
-          displayName.toLowerCase() == username
-            ? displayName
-            : `${displayName} (${username})`;
-        let message = wsdata.data.message.message;
-        let dcChannel = await client.channels.fetch(process.env["CHANNEL_ID"]);
-        if (dcChannel) {
-          if (dcChannel.isTextBased()) {
-            // https://discordjs.guide/message-components/buttons.html
-            let deleteBtn = new ButtonBuilder()
-              .setCustomId(`delete${msgId}`)
-              .setLabel("Delete")
-              .setStyle(ButtonStyle.Success);
-            let timeoutBtn = new ButtonBuilder()
-              .setCustomId(`timeout${username}`)
-              .setLabel("Timeout")
-              .setStyle(ButtonStyle.Danger);
-            let banBtn = new ButtonBuilder()
-              .setCustomId(`ban${username}`)
-              .setLabel("Ban")
-              .setStyle(ButtonStyle.Danger);
-            let actionRow = new ActionRowBuilder().addComponents(
-              deleteBtn,
-              timeoutBtn,
-              banBtn,
-            );
-            dcChannel.send({
-              content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
-              components: [actionRow],
-            });
-          }
-        }
-      }
-    }
-  };
-}
-
-setTimeout(connectstreamerbot, 100);
