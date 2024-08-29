@@ -12,6 +12,8 @@ import {
 } from "discord.js";
 import { StreamerbotClient } from "@streamerbot/client";
 
+const messages = {};
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
   partials: [
@@ -28,6 +30,64 @@ const SBClient = new StreamerbotClient({
   port: process.env.STREAMER_BOT_WS_SERVER_PORT,
   onConnect: async (data) => {
     console.log("Streamer.Bot Connection opened!");
+    await SBClient.on("Twitch.ChatMessageDeleted", async (data) => {
+      console.log("Twitch Chat Message deleted:", data);
+      if (messages[data.data.targetMessageId]) {
+        console.log(messages[data.data.targetMessageId]);
+        await messages[data.data.targetMessageId].delete();
+        delete messages[data.data.targetMessageId];
+        console.log(messages[data.data.targetMessageId]);
+      }
+    });
+    await SBClient.on("Twitch.ChatCleared", async (data) => {
+      console.log("Twitch Chat Cleared:", data);
+      let indexedMessages = [];
+      let channel = null;
+      for (let key of Object.keys(messages)) {
+        if (messages[key].channel) channel = messages[key].channel;
+        indexedMessages.push(messages[key]);
+        delete messages[key];
+      }
+      if (channel) await channel.bulkDelete(indexedMessages);
+    });
+    await SBClient.on("Twitch.UserBanned", async (data) => {
+      console.log("Twitch User Banned:", data);
+      let displayName = data.data.user_name;
+      let username = data.data.user_login;
+      let nameToPost =
+        displayName.toLowerCase() == username
+          ? displayName
+          : `${displayName} (${username})`;
+      let indexedMessages = [];
+      let channel = null;
+      for (let key of Object.keys(messages)) {
+        if (messages[key].content.startsWith(`\`\`${nameToPost}\`\``)) {
+          if (messages[key].channel) channel = messages[key].channel;
+          indexedMessages.push(messages[key]);
+          delete messages[key];
+        }
+      }
+      if (channel) await channel.bulkDelete(indexedMessages);
+    });
+    await SBClient.on("Twitch.UserTimedOut", async (data) => {
+      console.log("Twitch User TimedOut:", data);
+      let displayName = data.data.user_name;
+      let username = data.data.user_login;
+      let nameToPost =
+        displayName.toLowerCase() == username
+          ? displayName
+          : `${displayName} (${username})`;
+      let indexedMessages = [];
+      let channel = null;
+      for (let key of Object.keys(messages)) {
+        if (messages[key].content.startsWith(`\`\`${nameToPost}\`\``)) {
+          if (messages[key].channel) channel = messages[key].channel;
+          indexedMessages.push(messages[key]);
+          delete messages[key];
+        }
+      }
+      if (channel) await channel.bulkDelete(indexedMessages);
+    });
     await SBClient.on("Twitch.ChatMessage", async (data) => {
       console.log("New Twitch Chat Message:", data);
       let msgId = data.data.message.msgId;
@@ -60,10 +120,11 @@ const SBClient = new StreamerbotClient({
             timeoutBtn,
             banBtn,
           );
-          dcChannel.send({
+          let dcMessage = await dcChannel.send({
             content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
             components: [actionRow],
           });
+          messages[msgId] = dcMessage;
         }
       }
     });

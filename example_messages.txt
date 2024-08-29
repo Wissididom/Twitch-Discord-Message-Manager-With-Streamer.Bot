@@ -1,0 +1,92 @@
+New Twitch Chat Message:
+{
+  timeStamp: '2024-08-29T23:31:55.9184936+02:00',
+  event: { source: 'Twitch', type: 'ChatMessage' },
+  data: {
+    message: {
+      internal: false,
+      msgId: 'fc104cca-5093-4c3c-87ae-dedd9c3f7b46',
+      userId: '636874779',
+      username: 'wissididom',
+      role: 4,
+      subscriber: false,
+      displayName: 'Wissididom',
+      channel: 'wissididom',
+      message: 'Test',
+      isHighlighted: false,
+      isMe: false,
+      isCustomReward: false,
+      isAnonymous: false,
+      isReply: false,
+      bits: 0,
+      firstMessage: false,
+      hasBits: false,
+      emotes: [],
+      cheerEmotes: [],
+      badges: [Array],
+      monthsSubscribed: 0,
+      isTest: false
+    }
+  }
+}
+---
+Twitch Chat Message deleted:
+{
+  timeStamp: '2024-08-29T23:32:38.6045892+02:00',
+  event: { source: 'Twitch', type: 'ChatMessageDeleted' },
+  data: {
+    targetMessageId: 'fc104cca-5093-4c3c-87ae-dedd9c3f7b46',
+    message: 'Test',
+    userName: 'wissididom',
+    role: 0,
+    isTest: false
+  }
+}
+---
+Twitch Chat Cleared:
+{
+  timeStamp: '2024-08-29T23:49:51.8765146+02:00',
+  event: { source: 'Twitch', type: 'ChatCleared' },
+  data: {
+    moderator_user_id: '636874779',
+    moderator_user_login: 'wissididom',
+    moderator_user_name: 'Wissididom',
+    created_at: '2024-08-29T21:49:51.6987381Z',
+    is_test: false
+  }
+}
+---
+Twitch User Banned:
+{
+  timeStamp: '2024-08-30T00:03:47.1435345+02:00',
+  event: { source: 'Twitch', type: 'UserBanned' },
+  data: {
+    user_id: '926786335',
+    user_login: 'jvffvqvqbz',
+    user_name: 'jvffvqvqbz',
+    reason: 'Testing',
+    moderator_user_id: '636874779',
+    moderator_user_login: 'wissididom',
+    moderator_user_name: 'Wissididom',
+    created_at: '2024-08-29T22:03:46.9243287Z',
+    is_test: false
+  }
+}
+---
+Twitch User TimedOut: {
+  timeStamp: '2024-08-30T00:12:43.5656181+02:00',
+  event: { source: 'Twitch', type: 'UserTimedOut' },
+  data: {
+    user_id: '926786335',
+    user_login: 'jvffvqvqbz',
+    user_name: 'jvffvqvqbz',
+    reason: '',
+    expires_at: '2024-08-29T22:12:44.3376502Z',
+    duration: 1,
+    moderator_user_id: '636874779',
+    moderator_user_login: 'wissididom',
+    moderator_user_name: 'Wissididom',
+    created_at: '2024-08-29T22:12:43.3611164Z',
+    is_test: false
+  }
+}
