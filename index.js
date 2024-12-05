@@ -1,9 +1,9 @@
-import "dotenv/config";
 import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   Client,
+  Events,
   GatewayIntentBits,
   ModalBuilder,
   Partials,
@@ -26,9 +26,9 @@ const client = new Client({
 }); // Discord Object
 
 const SBClient = new StreamerbotClient({
-  host: process.env.STREAMER_BOT_WS_SERVER_HOST,
-  port: process.env.STREAMER_BOT_WS_SERVER_PORT,
-  onConnect: async (data) => {
+  host: Deno.env.get("STREAMER_BOT_WS_SERVER_HOST"),
+  port: Deno.env.get("STREAMER_BOT_WS_SERVER_PORT"),
+  onConnect: async (_data) => {
     console.log("Streamer.Bot Connection opened!");
     await SBClient.on("Twitch.ChatMessageDeleted", async (data) => {
       console.log("Twitch Chat Message deleted:", data);
@@ -41,9 +41,9 @@ const SBClient = new StreamerbotClient({
     });
     await SBClient.on("Twitch.ChatCleared", async (data) => {
       console.log("Twitch Chat Cleared:", data);
-      let indexedMessages = [];
+      const indexedMessages = [];
       let channel = null;
-      for (let key of Object.keys(messages)) {
+      for (const key of Object.keys(messages)) {
         if (messages[key].channel) channel = messages[key].channel;
         indexedMessages.push(messages[key]);
         delete messages[key];
@@ -52,15 +52,14 @@ const SBClient = new StreamerbotClient({
     });
     await SBClient.on("Twitch.UserBanned", async (data) => {
       console.log("Twitch User Banned:", data);
-      let displayName = data.data.user_name;
-      let username = data.data.user_login;
-      let nameToPost =
-        displayName.toLowerCase() == username
-          ? displayName
-          : `${displayName} (${username})`;
-      let indexedMessages = [];
+      const displayName = data.data.user_name;
+      const username = data.data.user_login;
+      const nameToPost = displayName.toLowerCase() == username
+        ? displayName
+        : `${displayName} (${username})`;
+      const indexedMessages = [];
       let channel = null;
-      for (let key of Object.keys(messages)) {
+      for (const key of Object.keys(messages)) {
         if (messages[key].content.startsWith(`\`\`${nameToPost}\`\``)) {
           if (messages[key].channel) channel = messages[key].channel;
           indexedMessages.push(messages[key]);
@@ -71,15 +70,14 @@ const SBClient = new StreamerbotClient({
     });
     await SBClient.on("Twitch.UserTimedOut", async (data) => {
       console.log("Twitch User TimedOut:", data);
-      let displayName = data.data.user_name;
-      let username = data.data.user_login;
-      let nameToPost =
-        displayName.toLowerCase() == username
-          ? displayName
-          : `${displayName} (${username})`;
-      let indexedMessages = [];
+      const displayName = data.data.user_name;
+      const username = data.data.user_login;
+      const nameToPost = displayName.toLowerCase() == username
+        ? displayName
+        : `${displayName} (${username})`;
+      const indexedMessages = [];
       let channel = null;
-      for (let key of Object.keys(messages)) {
+      for (const key of Object.keys(messages)) {
         if (messages[key].content.startsWith(`\`\`${nameToPost}\`\``)) {
           if (messages[key].channel) channel = messages[key].channel;
           indexedMessages.push(messages[key]);
@@ -90,37 +88,36 @@ const SBClient = new StreamerbotClient({
     });
     await SBClient.on("Twitch.ChatMessage", async (data) => {
       console.log("New Twitch Chat Message:", data);
-      let msgId = data.data.message.msgId;
-      //let userId = data.data.message.userId;
-      let displayName = data.data.message.displayName;
-      let username = data.data.message.username;
-      let nameToPost =
-        displayName.toLowerCase() == username
-          ? displayName
-          : `${displayName} (${username})`;
-      let message = data.data.message.message;
-      let dcChannel = await client.channels.fetch(process.env["CHANNEL_ID"]);
+      const msgId = data.data.message.msgId;
+      //const userId = data.data.message.userId;
+      const displayName = data.data.message.displayName;
+      const username = data.data.message.username;
+      const nameToPost = displayName.toLowerCase() == username
+        ? displayName
+        : `${displayName} (${username})`;
+      const message = data.data.message.message;
+      const dcChannel = await client.channels.fetch(Deno.env.get("CHANNEL_ID"));
       if (dcChannel) {
         if (dcChannel.isTextBased()) {
           // https://discordjs.guide/message-components/buttons.html
-          let deleteBtn = new ButtonBuilder()
+          const deleteBtn = new ButtonBuilder()
             .setCustomId(`delete${msgId}`)
             .setLabel("Delete")
             .setStyle(ButtonStyle.Success);
-          let timeoutBtn = new ButtonBuilder()
+          const timeoutBtn = new ButtonBuilder()
             .setCustomId(`timeout${username}`)
             .setLabel("Timeout")
             .setStyle(ButtonStyle.Danger);
-          let banBtn = new ButtonBuilder()
+          const banBtn = new ButtonBuilder()
             .setCustomId(`ban${username}`)
             .setLabel("Ban")
             .setStyle(ButtonStyle.Danger);
-          let actionRow = new ActionRowBuilder().addComponents(
+          const actionRow = new ActionRowBuilder().addComponents(
             deleteBtn,
             timeoutBtn,
             banBtn,
           );
-          let dcMessage = await dcChannel.send({
+          const dcMessage = await dcChannel.send({
             content: `\`\`${nameToPost}\`\`: \`\`${message}\`\``,
             components: [actionRow],
           });
@@ -137,34 +134,30 @@ const SBClient = new StreamerbotClient({
   },
 });
 
-async function getActions() {
-  return SBClient.getActions();
-}
-
 async function doAction(actionId, args = null) {
   if (!args) args = {};
-  return SBClient.doAction(actionId, args);
+  return await SBClient.doAction(actionId, args);
 }
 
-client.on("ready", () => {
+client.on(Events.ClientReady, () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on("interactionCreate", async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.guild?.available) return;
   if (!interaction.guildId) return;
   if (interaction.isButton()) {
     if (interaction.customId.startsWith("delete")) {
-      let id = interaction.customId.substring("delete".length);
-      let actionId = process.env["DELETE_ACTION_ID"];
+      const id = interaction.customId.substring("delete".length);
+      const actionId = Deno.env.get("DELETE_ACTION_ID");
       await doAction(actionId, {
         id: id,
       }).then(() => {
         interaction.reply("Told Streamer.Bot to run the delete action");
       });
     } else if (interaction.customId.startsWith("timeout")) {
-      let username = interaction.customId.substring("timeout".length);
-      let modal = new ModalBuilder()
+      const username = interaction.customId.substring("timeout".length);
+      const modal = new ModalBuilder()
         .setTitle("Timeout User")
         .setCustomId("timeoutModal")
         .setComponents(
@@ -187,7 +180,7 @@ client.on("interactionCreate", async (interaction) => {
           ),
         );
       await interaction.showModal(modal);
-      let submitted = await interaction
+      const submitted = await interaction
         .awaitModalSubmit({
           filter: (i) =>
             i.customId == "timeoutModal" && i.user.id == interaction.user.id,
@@ -197,9 +190,9 @@ client.on("interactionCreate", async (interaction) => {
           console.error(err);
         });
       if (submitted) {
-        let duration = submitted.fields.getTextInputValue("timeoutDuration");
-        let reason = submitted.fields.getTextInputValue("timeoutReason");
-        let actionId = process.env["TIMEOUT_ACTION_ID"];
+        const duration = submitted.fields.getTextInputValue("timeoutDuration");
+        const reason = submitted.fields.getTextInputValue("timeoutReason");
+        const actionId = Deno.env.get("TIMEOUT_ACTION_ID");
         if (reason == undefined || reason == null || reason.trim() == "") {
           await doAction(actionId, {
             username: username,
@@ -218,8 +211,8 @@ client.on("interactionCreate", async (interaction) => {
         }
       }
     } else if (interaction.customId.startsWith("ban")) {
-      let username = interaction.customId.substring("ban".length);
-      let modal = new ModalBuilder()
+      const username = interaction.customId.substring("ban".length);
+      const modal = new ModalBuilder()
         .setTitle("Ban User")
         .setCustomId("banModal")
         .setComponents(
@@ -233,7 +226,7 @@ client.on("interactionCreate", async (interaction) => {
           ),
         );
       await interaction.showModal(modal);
-      let submitted = await interaction
+      const submitted = await interaction
         .awaitModalSubmit({
           filter: (i) =>
             i.customId == "banModal" && i.user.id == interaction.user.id,
@@ -243,8 +236,8 @@ client.on("interactionCreate", async (interaction) => {
           console.error(err);
         });
       if (submitted) {
-        let reason = submitted.fields.getTextInputValue("banReason");
-        let actionId = process.env["BAN_ACTION_ID"];
+        const reason = submitted.fields.getTextInputValue("banReason");
+        const actionId = Deno.env.get("BAN_ACTION_ID");
         if (reason == undefined || reason == null || reason.trim() == "") {
           await doAction(actionId, {
             username: username,
@@ -264,11 +257,13 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+const token = Deno.env.get("TOKEN");
+
 // Bot Login
-if (!process.env["TOKEN"]) {
+if (!token) {
   console.log(
     "TOKEN not found! You must setup the Discord TOKEN as per the README file before running this bot.",
   );
 } else {
-  client.login(process.env["TOKEN"]);
+  client.login(token);
 }
