@@ -12,8 +12,8 @@ function sanitizeUrl(url) {
 }
 
 async function getActions() {
-  let sanitizedUrl =
-    sanitizeUrl(process.env["STREAMER_BOT_HTTP_SERVER"]) + "GetActions";
+  let sanitizedUrl = sanitizeUrl(process.env["STREAMER_BOT_HTTP_SERVER"]) +
+    "GetActions";
   let response = await fetch(sanitizedUrl);
   if (response.status == 200) {
     let actions = (await response.json()).actions;

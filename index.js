@@ -54,10 +54,9 @@ const SBClient = new StreamerbotClient({
       console.log("Twitch User Banned:", data);
       let displayName = data.data.user_name;
       let username = data.data.user_login;
-      let nameToPost =
-        displayName.toLowerCase() == username
-          ? displayName
-          : `${displayName} (${username})`;
+      let nameToPost = displayName.toLowerCase() == username
+        ? displayName
+        : `${displayName} (${username})`;
       let indexedMessages = [];
       let channel = null;
       for (let key of Object.keys(messages)) {
@@ -73,10 +72,9 @@ const SBClient = new StreamerbotClient({
       console.log("Twitch User TimedOut:", data);
       let displayName = data.data.user_name;
       let username = data.data.user_login;
-      let nameToPost =
-        displayName.toLowerCase() == username
-          ? displayName
-          : `${displayName} (${username})`;
+      let nameToPost = displayName.toLowerCase() == username
+        ? displayName
+        : `${displayName} (${username})`;
       let indexedMessages = [];
       let channel = null;
       for (let key of Object.keys(messages)) {
@@ -94,10 +92,9 @@ const SBClient = new StreamerbotClient({
       //let userId = data.data.message.userId;
       let displayName = data.data.message.displayName;
       let username = data.data.message.username;
-      let nameToPost =
-        displayName.toLowerCase() == username
-          ? displayName
-          : `${displayName} (${username})`;
+      let nameToPost = displayName.toLowerCase() == username
+        ? displayName
+        : `${displayName} (${username})`;
       let message = data.data.message.message;
       let dcChannel = await client.channels.fetch(process.env["CHANNEL_ID"]);
       if (dcChannel) {
