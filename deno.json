@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "imports": {
+    "@streamerbot/client": "npm:@streamerbot/client@^1.11.0",
+    "discord.js": "npm:discord.js@^14.21.0"
+  },
+  "nodeModulesDir": "auto"
+}

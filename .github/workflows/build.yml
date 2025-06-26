@@ -27,7 +27,7 @@ jobs:
           deno install
       - name: Compile
         run: |
-          deno compile -N index.js
+          deno compile -N main.ts
       - name: Upload artifact (Windows)
         if: startsWith(matrix.os, 'windows')
         uses: actions/upload-artifact@v4
