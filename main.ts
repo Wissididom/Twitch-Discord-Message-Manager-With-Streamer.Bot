@@ -62,8 +62,37 @@ const SBClient = new StreamerbotClient({
     });
     await SBClient.on("Twitch.UserBanned", async (data) => {
       console.log("Twitch User Banned:", data);
-      const displayName = data.data.user_name; // TODO: Check type and if Streamer.Bot complies with the type definitions
-      const username = data.data.user_login; // TODO: Check type and if Streamer.Bot complies with the type definitions
+      //const displayName = data.data.user_name;
+      const displayName = (data as unknown as {
+        timeStamp: string;
+        event: { source: string; type: string };
+        data: {
+          user_id: string;
+          user_login: string;
+          user_name: string;
+          reason: string | null | undefined;
+          moderator_user_id: string;
+          moderator_user_login: string;
+          moderator_user_name: string;
+          created_at: string;
+          is_test: boolean;
+        };
+      }).data.user_name;
+      const username = (data as unknown as {
+        timeStamp: string;
+        event: { source: string; type: string };
+        data: {
+          user_id: string;
+          user_login: string;
+          user_name: string;
+          reason: string | null | undefined;
+          moderator_user_id: string;
+          moderator_user_login: string;
+          moderator_user_name: string;
+          created_at: string;
+          is_test: boolean;
+        };
+      }).data.user_login;
       const nameToPost = displayName.toLowerCase() == username
         ? displayName
         : `${displayName} (${username})`;
@@ -87,8 +116,42 @@ const SBClient = new StreamerbotClient({
     });
     await SBClient.on("Twitch.UserTimedOut", async (data) => {
       console.log("Twitch User TimedOut:", data);
-      const displayName = data.data.user_name; // TODO: Check type and if Streamer.Bot complies with the type definitions
-      const username = data.data.user_login; // TODO: Check type and if Streamer.Bot complies with the type definitions
+      //const displayName = data.data.user_name;
+      const displayName = (data as unknown as {
+        timeStamp: string;
+        event: { source: string; type: string };
+        data: {
+          user_id: string;
+          user_login: string;
+          user_name: string;
+          reason: string | null | undefined;
+          expires_at: string;
+          duration: number;
+          moderator_user_id: string;
+          moderator_user_login: string;
+          moderator_user_name: string;
+          created_at: string;
+          is_test: boolean;
+        };
+      }).data.user_name;
+      //const username = data.data.user_login;
+      const username = (data as unknown as {
+        timeStamp: string;
+        event: { source: string; type: string };
+        data: {
+          user_id: string;
+          user_login: string;
+          user_name: string;
+          reason: string | null | undefined;
+          expires_at: string;
+          duration: number;
+          moderator_user_id: string;
+          moderator_user_login: string;
+          moderator_user_name: string;
+          created_at: string;
+          is_test: boolean;
+        };
+      }).data.user_login;
       const nameToPost = displayName.toLowerCase() == username
         ? displayName
         : `${displayName} (${username})`;
