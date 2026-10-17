@@ -3,7 +3,7 @@
     "dev": "deno run --watch main.ts"
   },
   "imports": {
-    "@streamerbot/client": "npm:@streamerbot/client@^1.11.0",
+    "@streamerbot/client": "npm:@streamerbot/client@^2.0.1",
     "discord.js": "npm:discord.js@^14.27.0"
   },
   "nodeModulesDir": "auto"
