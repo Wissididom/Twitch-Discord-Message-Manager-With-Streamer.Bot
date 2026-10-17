@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:@streamerbot/client@^1.11.0": "1.11.0_bufferutil@4.0.9",
+    "npm:@streamerbot/client@^2.0.1": "2.0.1",
     "npm:discord.js@^14.27.0": "14.27.0"
   },
   "npm": {
@@ -76,12 +76,10 @@
     "@sapphire/snowflake@3.5.5": {
       "integrity": "sha512-xzvBr1Q1c4lCe7i6sRnrofxeO1QTP/LKQ6A6qy0iB4x5yfiSfARMEQEghojzTNALDTcv8En04qYNIco9/K9eZQ=="
     },
-    "@streamerbot/client@1.11.0_bufferutil@4.0.9": {
-      "integrity": "sha512-Lcz+Vo7wlRX4k/O2O/DnnVYrFa9TaE3RYqW7tlkKgI5m4zh9T/pd8saSWAQkYSAfMQxI1POymdeya3JTptcEFQ==",
+    "@streamerbot/client@2.0.1": {
+      "integrity": "sha512-LpFkc9uoW4ljLN/1GF/VKTbuD052tddyoV0cYbpE3Ul26FWzYQzO4oW+Kba7i+v3tMkYv0Q4MsrhmagtKuDkbg==",
       "dependencies": [
-        "bufferutil",
-        "uncrypto",
-        "ws"
+        "uncrypto"
       ]
     },
     "@types/node@26.6.5": {
@@ -170,7 +168,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@streamerbot/client@^1.11.0",
+      "npm:@streamerbot/client@^2.0.1",
       "npm:discord.js@^14.27.0"
     ]
   }
