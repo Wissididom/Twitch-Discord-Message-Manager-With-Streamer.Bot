@@ -11,9 +11,9 @@ async function getActions() {
     }[]
   >((resolve, reject) => {
     const SBClient = new StreamerbotClient({
-      host: Deno.env.get("STREAMER_BOT_WS_SERVER_HOST"),
-      port: Deno.env.has("STREAMER_BOT_WS_SERVER_PORT")
-        ? parseInt(Deno.env.get("STREAMER_BOT_WS_SERVER_PORT")!)
+      host: process.env.STREAMER_BOT_WS_SERVER_HOST,
+      port: process.env.STREAMER_BOT_WS_SERVER_PORT
+        ? parseInt(process.env.STREAMER_BOT_WS_SERVER_PORT!)
         : undefined,
       onConnect: async (_data) => {
         //console.log("Streamer.Bot Connection opened!");

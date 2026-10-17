@@ -27,9 +27,9 @@ const client = new Client({
 }); // Discord Object
 
 const SBClient = new StreamerbotClient({
-  host: Deno.env.get("STREAMER_BOT_WS_SERVER_HOST"),
-  port: Deno.env.has("STREAMER_BOT_WS_SERVER_PORT")
-    ? parseInt(Deno.env.get("STREAMER_BOT_WS_SERVER_PORT")!)
+  host: process.env.STREAMER_BOT_WS_SERVER_HOST,
+  port: process.env.STREAMER_BOT_WS_SERVER_PORT
+    ? parseInt(process.env.STREAMER_BOT_WS_SERVER_PORT!)
     : undefined,
   onConnect: async (_data) => {
     console.log("Streamer.Bot Connection opened!");
@@ -183,8 +183,8 @@ const SBClient = new StreamerbotClient({
         ? displayName
         : `${displayName} (${username})`;
       const message = data.data.message.message;
-      const dcChannel = Deno.env.has("CHANNEL_ID")
-        ? await client.channels.fetch(Deno.env.get("CHANNEL_ID")!)
+      const dcChannel = process.env.CHANNEL_ID
+        ? await client.channels.fetch(process.env.CHANNEL_ID!)
         : undefined;
       if (
         dcChannel && "send" in dcChannel && typeof dcChannel.send === "function"
@@ -231,7 +231,6 @@ const SBClient = new StreamerbotClient({
 
 async function doAction(
   actionId: string,
-  // deno-lint-ignore no-explicit-any
   args: Record<string, any> | null = null,
 ) {
   if (!args) args = {};
@@ -248,8 +247,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isButton()) {
     if (interaction.customId.startsWith("delete")) {
       const id = interaction.customId.substring("delete".length);
-      if (!Deno.env.has("DELETE_ACTION_ID")) return;
-      const actionId = Deno.env.get("DELETE_ACTION_ID")!;
+      if (!process.env.DELETE_ACTION_ID) return;
+      const actionId = process.env.DELETE_ACTION_ID!;
       await doAction(actionId, {
         id: id,
       }).then(() => {
@@ -292,8 +291,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
       if (submitted) {
         const duration = submitted.fields.getTextInputValue("timeoutDuration");
         const reason = submitted.fields.getTextInputValue("timeoutReason");
-        if (!Deno.env.has("TIMEOUT_ACTION_ID")) return;
-        const actionId = Deno.env.get("TIMEOUT_ACTION_ID")!;
+        if (!process.env.TIMEOUT_ACTION_ID) return;
+        const actionId = process.env.TIMEOUT_ACTION_ID!;
         if (reason == undefined || reason == null || reason.trim() == "") {
           await doAction(actionId, {
             username: username,
@@ -338,8 +337,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         });
       if (submitted) {
         const reason = submitted.fields.getTextInputValue("banReason");
-        if (!Deno.env.has("BAN_ACTION_ID")) return;
-        const actionId = Deno.env.get("BAN_ACTION_ID")!;
+        if (!process.env.BAN_ACTION_ID) return;
+        const actionId = process.env.BAN_ACTION_ID!;
         if (reason == undefined || reason == null || reason.trim() == "") {
           await doAction(actionId, {
             username: username,
@@ -359,7 +358,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-const token = Deno.env.get("TOKEN");
+const token = process.env.TOKEN;
 
 // Bot Login
 if (!token) {

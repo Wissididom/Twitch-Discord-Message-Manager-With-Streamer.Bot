@@ -1,0 +1,22 @@
+{
+  "name": "twitch-discord-message-manager-with-streamer.bot",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Wissididom/Twitch-Discord-Message-Manager-With-Streamer.Bot#readme",
+  "bugs": {
+    "url": "https://github.com/Wissididom/Twitch-Discord-Message-Manager-With-Streamer.Bot/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wissididom/Twitch-Discord-Message-Manager-With-Streamer.Bot.git"
+  },
+  "type": "module",
+  "main": "main.ts",
+  "scripts": {
+    "start": "node main.ts"
+  },
+  "dependencies": {
+    "@streamerbot/client": "^2.0.1",
+    "discord.js": "^14.27.0"
+  }
+}
