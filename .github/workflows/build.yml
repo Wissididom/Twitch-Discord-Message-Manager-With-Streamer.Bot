@@ -30,13 +30,13 @@ jobs:
           deno compile -N main.ts
       - name: Upload artifact (Windows)
         if: startsWith(matrix.os, 'windows')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Twitch-Discord-Message-Manager-With-Streamer.Bot-${{ matrix.os }}
           path: Twitch-Discord-Message-Manager-With-Streamer.Bot.exe
       - name: Upload artifact (Ubuntu and Mac)
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Twitch-Discord-Message-Manager-With-Streamer.Bot-${{ matrix.os }}
           path: Twitch-Discord-Message-Manager-With-Streamer.Bot
