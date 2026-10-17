@@ -50,7 +50,7 @@ jobs:
         name: Checkout Code
 
       # Windows
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         name: Download Windows
         with:
           name: Twitch-Discord-Message-Manager-With-Streamer.Bot-windows-latest
@@ -59,7 +59,7 @@ jobs:
       - name: Rename Windows Binary
         run: mv release-artifacts/Twitch-Discord-Message-Manager-With-Streamer.Bot.exe release-artifacts/Twitch-Discord-Message-Manager-With-Streamer.Bot-Windows.exe
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         name: Download Linux
         with:
           name: Twitch-Discord-Message-Manager-With-Streamer.Bot-ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
       - name: Rename Linux Binary
         run: mv release-artifacts/Twitch-Discord-Message-Manager-With-Streamer.Bot release-artifacts/Twitch-Discord-Message-Manager-With-Streamer.Bot-Linux
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         name: Download Mac
         with:
           name: Twitch-Discord-Message-Manager-With-Streamer.Bot-macos-latest
